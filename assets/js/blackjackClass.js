@@ -46,7 +46,9 @@ class BlackJack {
 
     }
 
-    endGame () {}
+    endGame () {
+        this.gameControls.forEach( control => document.querySelector(control).disabled = true )
+    }
 
     resetGame (type) {
         if (type) {
@@ -58,6 +60,7 @@ class BlackJack {
         this.gameResult = false;
         document.querySelector('.players-hand').innerHTML = '';
         document.querySelector('.dealers-hand').innerHTML = '';
+        this.gameControls.forEach( control => document.querySelector(control).disabled = false );
     }
 
     // --- Card Manipulation Methods --- //
@@ -127,13 +130,13 @@ class BlackJack {
     hit () {
         let playersCard = this.randomCardSelector();
         document.querySelector('.players-hand').append( this.createCard(playersCard) )
-        // this.updatePlayerScore(playersCard.value);
-        // if (this.playersHand[0] > 21) {
-        //     setTimeout( () => {
-        //         this.bust();
-        //         this.endGame();
-        //     }, 100)
-        // }
+        this.updateScore(playersCard.value,this.playersHand);
+        if (this.playersHand[0] > 21) {
+            this.displayMessage("Player Busted!", "lose");
+            setTimeout( () => {
+                this.endGame();
+            }, 500)
+        }
         // Not yet ^^
     }
 
@@ -165,7 +168,6 @@ class BlackJack {
     // --- Scoring Methods --- //
 
     updateScore (value,player) {
-        
         // If the card drawn is an ace and the player does NOT have any other cards yet
         if (typeof value === 'object' && player.length === 0) {
             player.push(value[0],value[1])
