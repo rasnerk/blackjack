@@ -34,6 +34,23 @@ class BlackJack {
 
     bust () {}
 
+    displayMessage (message,type) {
+        let el = document.querySelector('.message');
+        let classes = ['win','lose','push'];
+
+        el.innerText = message;
+        classes.forEach( c => el.classList.remove(c))
+        el.classList.add(type);
+        el.style.display = 'block';
+        document.querySelector('main').classList.add('displaying-message');
+        
+        setTimeout( () => {
+            el.style.display = 'none';
+            document.querySelector('main').classList.remove('displaying-message');
+        },2500)
+
+    }
+
     // --- Scoring Methods --- //
 
     updateScore () {}
