@@ -9,6 +9,7 @@ class BlackJack {
         this.availableCards = []
         this.gameResult = false;
         this.gameInMotion = false;
+        this.gameControls = [".hit", ".stand", ".split", ".double"]
     }
 
     // --- Game Manipulation Methods --- //
@@ -18,17 +19,22 @@ class BlackJack {
             this.displayMessage('Cannot bet more than balance!','push');
             return;
         }
-        // let checkEligible = this.isEligible();
-        // if (checkEligible.eligible === false) {
-        //     this.displayMessage(checkEligible.message);
-        //     return;
-        // }
         
         // -- Does the game need to be reset? -- //
         if (this.handsDealt === 0) this.shuffleDeck();
+        // -- I don't like this but i need to disable the buttons or funky shtuff happens -- //
         if (this.handsDealt > 24) {
             this.displayMessage('Reshuffling Cards...','push')
             this.resetGame(true);
+            this.gameInMotion = true;
+            this.gameControls.forEach( (control) => document.querySelector(control).disabled = true )
+            document.querySelector('.deal').disabled = true;
+            setTimeout(() => {
+                this.dealCards();
+                this.gameControls.forEach( (control) => document.querySelector(control).disabled = false )
+                document.querySelector('.deal').disabled = false;
+            },3000)
+            return;
         }
 
         // -- Reset in Game Variables -- //
@@ -54,15 +60,6 @@ class BlackJack {
         document.querySelector('.dealers-hand').innerHTML = '';
     }
 
-    isEligible () {
-        // -- What makes a player uneligible? -- //
-        // Betting more than they can
-        // Doubling more than they can ^
-        // might not need this
-        if (this.playerBet > this.playerBalance) return { eligible: false, message: "Cannot bet more than balance!" };
-
-    }
-
     // --- Card Manipulation Methods --- //
     dealCards () {
         // -- Running tally of total hands dealt -- //
@@ -70,13 +67,14 @@ class BlackJack {
 
         // -- Players Cards -- //
         let playersCards = [ this.randomCardSelector(), this.randomCardSelector() ];
-
         // -- Dealers Cards -- //
         let dealersCards = [ this.randomCardSelector(), this.randomCardSelector() ];
 
         // -- Update Scores -- //
-        playersCards.forEach( card => this.updateScore(card) )
-        dealersCards.forEach( card => this.updateScore(card) )
+        console.log('player')
+        playersCards.forEach( card => this.updateScore(card.value,this.playersHand) )
+        console.log('dealer')
+        dealersCards.forEach( card => this.updateScore(card.value,this.dealersHand) )
 
         // -- Create & Append Card Images -- //
         playersCards.map( card => this.createCard(card) ).forEach( card => document.querySelector('.players-hand').append(card) );
@@ -126,7 +124,18 @@ class BlackJack {
         document.querySelector(".decrease-bet").addEventListener('click', () => this.decreaseBet() )
     }
 
-    hit () {}
+    hit () {
+        let playersCard = this.randomCardSelector();
+        document.querySelector('.players-hand').append( this.createCard(playersCard) )
+        // this.updatePlayerScore(playersCard.value);
+        // if (this.playersHand[0] > 21) {
+        //     setTimeout( () => {
+        //         this.bust();
+        //         this.endGame();
+        //     }, 100)
+        // }
+        // Not yet ^^
+    }
 
     stand () {}
 
@@ -155,7 +164,43 @@ class BlackJack {
 
     // --- Scoring Methods --- //
 
-    updateScore () {}
+    updateScore (value,player) {
+        
+        // If the card drawn is an ace and the player does NOT have any other cards yet
+        if (typeof value === 'object' && player.length === 0) {
+            player.push(value[0],value[1])
+        } 
+        // If the card drawn is an ace and the player has one non ace card
+        else if(typeof value === 'object' && player.length === 1) {
+            let x = player[0];
+            player = [];
+            value.forEach( (val) => {
+                player.push(x+val)
+            })
+        } 
+        // If the card drawn is an ace and the player already has an ace
+        else if (typeof value === 'object' && player.length > 1) {
+            player[0] += value[0];
+            player[1] += value[0];
+        } 
+        // If the card drawn is NOT an ace and the player already has an ace
+        else if (typeof value !== 'object' && player.length > 1) {
+            let x1 = player[0];
+            let x2 = player[1];
+            player = [];
+            player.push(x1+value);
+            player.push(x2+value)
+        } 
+        // If the card drawn is NOT an ace and the player does NOT have an ace BUT has a card
+        else if (typeof value !== 'object' && player.length === 1) {
+            player[0] += value;
+        }
+        // If the card drawn is NOT an ace and the player does NOT have any cards 
+        else {
+            player.push(value)
+        }
+        // ... wow what a shit show
+    }
 
     // --- Changing Bet Methods --- //
 
